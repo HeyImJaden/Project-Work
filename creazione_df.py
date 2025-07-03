@@ -30,6 +30,9 @@ def get_linee_dettaglio(body, cedente_info, data_fattura):
     rows = []
     for linea in beni_servizi.iterchildren():
         if linea.tag.endswith('DettaglioLinee'):
+            #  controllare se esiste il tag quantita
+            if not hasattr(linea, 'Quantita') or linea.Quantita is None:
+                linea.Quantita = -1
             row = {
                 'Data': data_fattura,
                 'IdPaese': id_paese,
@@ -38,7 +41,7 @@ def get_linee_dettaglio(body, cedente_info, data_fattura):
                 'Comune': comune,
                 'Provincia': provincia,
                 'Descrizione': str(linea.Descrizione),
-                'Quantita': int(float(linea.Quantita)),
+                'Quantita': int(float(linea.Quantita)) if int(float(linea.Quantita)) is not None else -1 ,
                 'PrezzoUnitario': float(linea.PrezzoUnitario),
                 'PrezzoTotale': float(linea.PrezzoTotale),
                 # 'AliquotaIVA': int(linea.AliquotaIVA)
