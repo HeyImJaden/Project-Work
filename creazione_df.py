@@ -28,10 +28,15 @@ def get_cessionario_codici_fiscali(header):
     for cessionario in find_all_children_by_tag(header, 'CessionarioCommittente'):
         dati_anagrafici = find_child_by_tag(cessionario, 'DatiAnagrafici')
         if dati_anagrafici is not None:
+            # Prendi tutti i CodiceFiscale
             for cf in find_all_children_by_tag(dati_anagrafici, 'CodiceFiscale'):
-                # Usa .text per preservare zeri iniziali
                 cf_str = cf.text if hasattr(cf, 'text') else str(cf)
                 codici.append(cf_str)
+            # Prendi tutti gli IdCodice dentro IdFiscaleIVA
+            id_fiscale_iva = find_child_by_tag(dati_anagrafici, 'IdFiscaleIVA')
+            if id_fiscale_iva is not None and hasattr(id_fiscale_iva, 'IdCodice'):
+                idcodice = id_fiscale_iva.IdCodice.text if hasattr(id_fiscale_iva.IdCodice, 'text') else str(id_fiscale_iva.IdCodice)
+                codici.append(idcodice)
     return codici
 
 def get_data_fattura(body):
