@@ -1,0 +1,3 @@
+pandas
+lxml
+# cryptography è opzionale, serve solo se usi funzioni che richiedono asn1crypto o gestione avanzata p7m
