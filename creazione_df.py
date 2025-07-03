@@ -14,8 +14,9 @@ def get_cedente_info(header):
     cedente = find_child_by_tag(header, 'CedentePrestatore')
     dati_anagrafici = find_child_by_tag(cedente, 'DatiAnagrafici')
     id_fiscale_iva = find_child_by_tag(dati_anagrafici, 'IdFiscaleIVA')
-    id_paese = str(id_fiscale_iva.IdPaese) if id_fiscale_iva is not None else ''
-    id_codice = str(id_fiscale_iva.IdCodice) if id_fiscale_iva is not None else ''
+    # Usa .text per preservare zeri iniziali
+    id_paese = id_fiscale_iva.IdPaese.text if id_fiscale_iva is not None and hasattr(id_fiscale_iva, 'IdPaese') else ''
+    id_codice = id_fiscale_iva.IdCodice.text if id_fiscale_iva is not None and hasattr(id_fiscale_iva, 'IdCodice') else ''
     sede = find_child_by_tag(cedente, 'Sede')
     cap = str(sede.CAP) if sede is not None and hasattr(sede, 'CAP') else ''
     comune = str(sede.Comune) if sede is not None and hasattr(sede, 'Comune') else ''
@@ -24,13 +25,13 @@ def get_cedente_info(header):
 
 def get_cessionario_codici_fiscali(header):
     codici = []
-    # Può esserci più di un CessionarioCommittente
     for cessionario in find_all_children_by_tag(header, 'CessionarioCommittente'):
         dati_anagrafici = find_child_by_tag(cessionario, 'DatiAnagrafici')
         if dati_anagrafici is not None:
-            # Può esserci più di un CodiceFiscale (anche se raro)
             for cf in find_all_children_by_tag(dati_anagrafici, 'CodiceFiscale'):
-                codici.append(str(cf))
+                # Usa .text per preservare zeri iniziali
+                cf_str = cf.text if hasattr(cf, 'text') else str(cf)
+                codici.append(cf_str)
     return codici
 
 def get_data_fattura(body):
@@ -73,7 +74,12 @@ def dataframe_linee_da_xml(path):
     codici_cessionario = get_cessionario_codici_fiscali(header)
     data_fattura = get_data_fattura(body)
     rows = get_linee_dettaglio(body, cedente_info, data_fattura, codici_cessionario)
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    # Forza i campi a stringa per preservare zeri iniziali
+    for col in ["IdFiscaleIVA", "CodiceFiscaleCessionario"]:
+        if col in df.columns:
+            df[col] = df[col].astype(str)
+    return df
 
 # Esempio di utilizzo:
 # from fattura_linee_utils import dataframe_linee_da_xml
